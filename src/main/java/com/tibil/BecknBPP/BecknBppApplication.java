@@ -2,8 +2,10 @@ package com.tibil.BecknBPP;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class BecknBppApplication {
 
 	public static void main(String[] args) {

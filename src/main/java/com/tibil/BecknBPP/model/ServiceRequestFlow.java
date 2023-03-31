@@ -20,6 +20,7 @@ public class ServiceRequestFlow extends BaseModel {
 	private String bppId;
 	@Column(columnDefinition = "TEXT")
 	private String data;
+	@Column(columnDefinition = "TEXT")
 	private String ack;
 	private String action;
 

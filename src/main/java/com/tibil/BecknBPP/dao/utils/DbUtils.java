@@ -58,7 +58,7 @@ public class DbUtils {
 		OffsetDateTime end = OffsetDateTime.now();
 		OffsetDateTime start = end.minusSeconds(Constants.SCHEDULE_DELAY / 1000);
 		
-		return serviceRequestFlowRepository.getByCreatedAtBetween(start, end);
+		return serviceRequestFlowRepository.getByCreatedAtBetweenAndAction(start, end, action);
 	}
 	
 	public List<Candidate> getCandidatesBasedOnDesignationAndSkills(String searchDesignation, List<String>skills){

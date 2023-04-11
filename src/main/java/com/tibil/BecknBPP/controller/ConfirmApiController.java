@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibil.BecknBPP.controller.api.ConfirmApi;
 import com.tibil.BecknBPP.dto.ConfirmBody;
 import com.tibil.BecknBPP.dto.InlineResponse200;
+import com.tibil.BecknBPP.service.ConfirmService;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -29,18 +30,21 @@ public class ConfirmApiController implements ConfirmApi {
     private final ObjectMapper objectMapper;
 
     private final HttpServletRequest request;
+    
+    private final ConfirmService confirmService;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public ConfirmApiController(ObjectMapper objectMapper, HttpServletRequest request) {
+    public ConfirmApiController(ObjectMapper objectMapper, HttpServletRequest request, ConfirmService confirmService) {
         this.objectMapper = objectMapper;
         this.request = request;
+        this.confirmService = confirmService;
     }
 
     public ResponseEntity<InlineResponse200> confirmPost(@Parameter(in = ParameterIn.DEFAULT, description = "TODO", schema=@Schema()) @Valid @RequestBody ConfirmBody body) {
         String accept = request.getHeader("Accept");
         if (accept != null && accept.contains("application/json")) {
             try {
-                return new ResponseEntity<InlineResponse200>(objectMapper.readValue("{\n  \"message\" : {\n    \"ack\" : {\n      \"status\" : \"ACK\"\n    }\n  },\n  \"error\" : {\n    \"path\" : \"path\",\n    \"code\" : \"code\",\n    \"type\" : \"CONTEXT-ERROR\",\n    \"message\" : \"message\"\n  }\n}", InlineResponse200.class), HttpStatus.NOT_IMPLEMENTED);
+                return new ResponseEntity<InlineResponse200>(objectMapper.readValue("{\n  \"message\" : {\n    \"ack\" : {\n      \"status\" : \"ACK\"\n    }\n  }\n}", InlineResponse200.class), HttpStatus.OK);
             } catch (IOException e) {
                 log.error("Couldn't serialize response for content type application/json", e);
                 return new ResponseEntity<InlineResponse200>(HttpStatus.INTERNAL_SERVER_ERROR);

@@ -14,5 +14,5 @@ import com.tibil.BecknBPP.model.ServiceRequestFlow;
 @Transactional
 public interface ServiceRequestFlowRepository extends JpaRepository<ServiceRequestFlow, Long> {
 
-	List<ServiceRequestFlow> getByCreatedAtBetween(OffsetDateTime start, OffsetDateTime end);
+	List<ServiceRequestFlow> getByCreatedAtBetweenAndAction(OffsetDateTime start, OffsetDateTime end, String action);
 }

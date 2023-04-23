@@ -1,7 +1,8 @@
 package com.tibil.BecknBPP.service;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +11,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.tibil.BecknBPP.dao.utils.DbUtils;
+import com.tibil.BecknBPP.dto.AllOfonSelectMessageOrderItemsItems;
+import com.tibil.BecknBPP.dto.Category;
 import com.tibil.BecknBPP.dto.Circle;
 import com.tibil.BecknBPP.dto.Contact;
+import com.tibil.BecknBPP.dto.Descriptor;
 import com.tibil.BecknBPP.dto.Context.ActionEnum;
 import com.tibil.BecknBPP.dto.Fulfillment;
 import com.tibil.BecknBPP.dto.FulfillmentStart;
@@ -21,6 +25,7 @@ import com.tibil.BecknBPP.dto.Location;
 import com.tibil.BecknBPP.dto.OnInitBody;
 import com.tibil.BecknBPP.dto.OnInitMessage;
 import com.tibil.BecknBPP.dto.OnInitMessageOrder;
+import com.tibil.BecknBPP.dto.OnInitMessageOrderItems;
 import com.tibil.BecknBPP.dto.OnInitMessageOrderProvider;
 import com.tibil.BecknBPP.dto.Payment;
 import com.tibil.BecknBPP.dto.Payment.TypeEnum;
@@ -29,6 +34,7 @@ import com.tibil.BecknBPP.dto.Quotation;
 import com.tibil.BecknBPP.dto.QuotationBreakup;
 import com.tibil.BecknBPP.dto.InitBody;
 import com.tibil.BecknBPP.model.Candidate;
+import com.tibil.BecknBPP.model.Designation;
 import com.tibil.BecknBPP.model.ServiceRequestFlow;
 
 @Component
@@ -53,6 +59,9 @@ public class InitService implements ProcessInternalRequestService {
 		dbUtils.insertServiceRequest(inputBody.getContext(), initRequestSerialized);
 
 		dbUtils.insertRequestFlow(inputBody.getContext(), initRequestSerialized, null);
+		
+		dbUtils.insertServiceOrder(inputBody.getContext(), initRequestSerialized, null);
+
 
 	}
 
@@ -66,54 +75,54 @@ public class InitService implements ProcessInternalRequestService {
 			System.out.println(f.toString());
 
 			InitBody initBody = utils.deserialiseData(f.getData(), InitBody.class);
-			String initDesignation = getInitDesignation(initBody);
-			List<String> skills = getInitSkillSets(initBody);
+			TypeEnum initPaymentType = getInitPaymentType(initBody);
 
-			System.out.println("Init designation --------------" + initDesignation);
-			skills.stream().forEach(x -> System.out.println(x));
-
-			List<Candidate> candidates = dbUtils.getCandidatesBasedOnDesignationAndSkills(initDesignation, skills);
-			System.out.println(candidates.size());
-			candidates.stream().forEach(x -> System.out.println(x));
-
-			OnInitBody body = getOnInitBody(initBody, candidates);
+			System.out.println("Payment Type --------------" + initPaymentType);
+		
+			OnInitBody body = getOnInitBody(initBody);
 			ResponseEntity<InlineResponse2001> response = restTemplate.postForEntity("http://localhost:8080/on_init",
 					body, InlineResponse2001.class);
 
 			dbUtils.insertRequestFlow(body.getContext(), utils.getSerialisedData(body),
 					utils.getSerialisedData(response.getBody()));
-
+			
+			dbUtils.insertServiceOrder(body.getContext(), utils.getSerialisedData(body), null);
+			
 		}
 
 	}
-
 	
-	public String getInitDesignation(InitBody initBody) {
+	
+	public TypeEnum getInitPaymentType(InitBody initBody) {
 
-		return initBody.getMessage().getOrder().getProvider().getId();
+		return initBody.getMessage().getOrder().getPayment().getType();
 	}
 
-	public List<String> getInitSkillSets(InitBody initBody) {
 
-		Location initLocation = initBody.getMessage().getOrder().getFulfillment().getStart().getLocation();
-		List<HashMap<String, Object>> skillSets = (List<HashMap<String, Object>>) initLocation.id("Tibil solutions");
-		List<String> skills = skillSets.stream().map(x -> x.get("code").toString()).collect(Collectors.toList());
-		return skills;
-	}
-
-	public OnInitBody getOnInitBody(InitBody initBody, List<Candidate> candidates) {
+	public OnInitBody getOnInitBody(InitBody initBody) {
 
 		OnInitBody onInitBody = new OnInitBody();
 		onInitBody.setContext(initBody.getContext().action(ActionEnum.ON_INIT));
-		onInitBody.setMessage(new OnInitMessage());
-		onInitBody.getMessage().setOrder(new OnInitMessageOrder().provider(new OnInitMessageOrderProvider().id("Tibil solutions")));
+		onInitBody.setMessage(new OnInitMessage().order(new OnInitMessageOrder()));
+		onInitBody.getMessage().getOrder().provider(new OnInitMessageOrderProvider().id("Tibil solutions"));
 
-		Item items = new Item().id("EMP-123");
+		OnInitMessageOrderItems onInitMessageOrderItems = new OnInitMessageOrderItems().id("1");
+		onInitMessageOrderItems.quantity("1");
+		
+		onInitBody.getMessage().getOrder().addItemsItem(onInitMessageOrderItems);
 		
 		Fulfillment fulFillment = new Fulfillment().tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
 		fulFillment.getEnd().location(new Location().gps("12.964319, 77.6810060000001")).contact(new Contact().phone("+919945099450"));
 		
-		onInitBody.getMessage().setOrder(new OnInitMessageOrder().quote(new Quotation().price(new Price().currency("INR").value("30")).breakup((List<QuotationBreakup>) new QuotationBreakup().title("Employee name").price(new Price().value("10.0")))));
+		onInitBody.getMessage().getOrder().setFulfillment(fulFillment);
+		onInitBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("30")));
+		
+		QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
+		quotationBreakup.title("Employee name200").price(new Price().value("10"));
+		quotationBreakup.title("BPP Fee").price(new Price().value("5"));
+		quotationBreakup.title("BAP Fee").price(new Price().value("5"));
+		
+		onInitBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(quotationBreakup));
 		onInitBody.getMessage().setOrder(new OnInitMessageOrder().payment(new Payment().type(TypeEnum.POST_FULFILLMENT)));
 
 		return onInitBody;

@@ -70,17 +70,9 @@ import com.tibil.BecknBPP.dto.ConfirmBody;
 				System.out.println(f.toString());
 
 				ConfirmBody confirmBody = utils.deserialiseData(f.getData(), ConfirmBody.class);
-				String confirmDesignation = getConfirmDesignation(confirmBody);
-				List<String> skills = getConfirmSkillSets(confirmBody);
 
-				System.out.println("Init designation --------------" + confirmDesignation);
-				skills.stream().forEach(x -> System.out.println(x));
-
-				List<Candidate> candidates = dbUtils.getCandidatesBasedOnDesignationAndSkills(confirmDesignation, skills);
-				System.out.println(candidates.size());
-				candidates.stream().forEach(x -> System.out.println(x));
-
-				OnConfirmBody body = getOnConfirmBody(confirmBody, candidates);
+				
+				OnConfirmBody body = getOnConfirmBody(confirmBody);
 				ResponseEntity<InlineResponse2001> response = restTemplate.postForEntity("http://localhost:8080/on_confirm",
 						body, InlineResponse2001.class);
 
@@ -92,20 +84,13 @@ import com.tibil.BecknBPP.dto.ConfirmBody;
 		}
 
 		
-		public String getConfirmDesignation(ConfirmBody confirmBody) {
+		public String getConfirmPayment(ConfirmBody confirmBody) {
 
-			return confirmBody.getMessage().getOrder().getProvider().getId();
+			return confirmBody.getMessage().getOrder().getPayment().getUri();
 		}
 
-		public List<String> getConfirmSkillSets(ConfirmBody confirmBody) {
 
-			Location confirmLocation = confirmBody.getMessage().getOrder().getFulfillment().getStart().getLocation();
-			List<HashMap<String, Object>> skillSets = (List<HashMap<String, Object>>) confirmLocation.id("Tibil solutions");
-			List<String> skills = skillSets.stream().map(x -> x.get("code").toString()).collect(Collectors.toList());
-			return skills;
-		}
-
-		public OnConfirmBody getOnConfirmBody(ConfirmBody confirmBody, List<Candidate> candidates) {
+		public OnConfirmBody getOnConfirmBody(ConfirmBody confirmBody) {
 
 			OnConfirmBody onConfirmBody = new OnConfirmBody();
 			onConfirmBody.setContext(confirmBody.getContext().action(ActionEnum.ON_CONFIRM));
@@ -120,11 +105,9 @@ import com.tibil.BecknBPP.dto.ConfirmBody;
 			fulFillment.tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
 			fulFillment.getEnd().contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay")).location(new Location().gps("12.964319, 77.6810060000001"));
 			
-			onConfirmBody.getMessage().setOrder(new Order().quote(new Quotation().price(new Price().currency("INR").value("30")).breakup((List<QuotationBreakup>) new QuotationBreakup().title("Employee name").price(new Price().value("10.0")))));
+			onConfirmBody.getMessage().setOrder(new Order().quote(new Quotation().price(new Price().currency("INR").value("30")).breakup((List<QuotationBreakup>) new QuotationBreakup())));               //.title("Employee name").price(new Price().value("10.0")))));
 			onConfirmBody.getMessage().setOrder(new Order().payment(new Payment().status(StatusEnum.PAID)));
-
 			return onConfirmBody;
 		}
 	
 }
-

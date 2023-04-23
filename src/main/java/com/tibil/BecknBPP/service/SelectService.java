@@ -13,12 +13,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.tibil.BecknBPP.dao.utils.DbUtils;
+import com.tibil.BecknBPP.dto.AddOn;
 import com.tibil.BecknBPP.dto.AllOfonSelectMessageOrderItemsItems;
 import com.tibil.BecknBPP.dto.Catalog;
 import com.tibil.BecknBPP.dto.Category;
 import com.tibil.BecknBPP.dto.Descriptor;
 import com.tibil.BecknBPP.dto.InlineResponse2001;
 import com.tibil.BecknBPP.dto.Item;
+import com.tibil.BecknBPP.dto.ItemQuantity;
 import com.tibil.BecknBPP.dto.OnSelectBody;
 import com.tibil.BecknBPP.dto.OnSelectMessage;
 import com.tibil.BecknBPP.dto.OnSelectMessageOrder;
@@ -71,17 +73,11 @@ public class SelectService implements ProcessInternalRequestService {
 			System.out.println(f.toString());
 
 			SelectBody selectBody = utils.deserialiseData(f.getData(), SelectBody.class);
-			String selectDesignation = getSelectDesignation(selectBody);
-			List<String> skills = getSelectSkillSets(selectBody);
+			String selectProviderId = getSelectProviderId(selectBody);
 
-			System.out.println("Select designation --------------" + selectDesignation);
-			skills.stream().forEach(x -> System.out.println(x));
-
-			List<Candidate> candidates = dbUtils.getCandidatesBasedOnDesignationAndSkills(selectDesignation, skills);
-			System.out.println(candidates.size());
-			candidates.stream().forEach(x -> System.out.println(x));
-
-			OnSelectBody body = getOnselectBody(selectBody, candidates);
+			System.out.println("Select providerId --------------" + selectProviderId);
+	
+			OnSelectBody body = getOnselectBody(selectBody);
 			ResponseEntity<InlineResponse2001> response = restTemplate.postForEntity("http://localhost:8080/on_select",
 					body, InlineResponse2001.class);
 
@@ -90,78 +86,57 @@ public class SelectService implements ProcessInternalRequestService {
 
 		}
 
+	}	
+
+	public String getSelectProviderId(SelectBody selectBody) {
+
+		return selectBody.getMessage().getOrder().getProvider().getId();
 	}
+		
 
-	public List<Item> createCandidatesItemList(List<Candidate> candidates) {
-
-		List<Item> items = new ArrayList<Item>();
-		for (Candidate candiate : candidates) {
-
-			Item item = new Item();
-			item.setId(String.valueOf(candiate.getId()));
-			item.descriptor(new Descriptor().name(candiate.getName()));
-			item.price(new Price().currency("INR").value(String.valueOf(candiate.getCtc())));
-
-			Tags tags = new Tags();
-			ArrayList<HashMap<String, String>> skillSet = new ArrayList<HashMap<String, String>>();
-			for (Skill skill : candiate.getSkills()) {
-
-				HashMap<String, String> map = new HashMap<String, String>();
-				map.put("code", skill.getName());
-				skillSet.add(map);
-			}
-			tags.put("code", "skills");
-			tags.put("list", skillSet);
-			item.setTags(tags);
-
-			items.add(item);
-		}
-		return items;
-
-	}
-
-	public List<Category> createResponseCategories(List<Candidate> candidates) {
-
-		Set<Category> categories = new HashSet<Category>();
-		for (Candidate candiate : candidates) {
-			Category category = new Category();
-			for (Designation designation : candiate.getDesignations()) {
-				category.setId(String.valueOf(designation.getId()));
-				category.descriptor(new Descriptor().name(designation.getName()));
-				categories.add(category);
-			}
-		}
-
-		return categories.stream().collect(Collectors.toList());
-	}
-
-	public String getSelectDesignation(SelectBody selectBody) {
-
-		return selectBody.getMessage().getOrder().getId();
-	}
-
-	public List<String> getSelectSkillSets(SelectBody selectBody) {
-
-		Tags selectTags = selectBody.getMessage().getOrder().getProvider().getTags();
-		List<HashMap<String, Object>> skillSets = (List<HashMap<String, Object>>) selectTags.get("list");
-		List<String> skills = skillSets.stream().map(x -> x.get("code").toString()).collect(Collectors.toList());
-		return skills;
-	}
-
-	public OnSelectBody getOnselectBody(SelectBody selectBody, List<Candidate> candidates) {
+	public OnSelectBody getOnselectBody(SelectBody selectBody) {
 
 		OnSelectBody onSelectBody = new OnSelectBody();
 		onSelectBody.setContext(selectBody.getContext().action(ActionEnum.ON_SELECT));
-		onSelectBody.setMessage(new OnSelectMessage());
-		onSelectBody.getMessage().setOrder(new OnSelectMessageOrder().provider(new Provider().id("Tibil solutions")));
-
-		Item items = new Item().id("1").descriptor(new Descriptor().name("Candidate1"));
-		items.setPrice(new Price().currency("INR"));
-		items.setTags(new Tags());
-
-		onSelectBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(new QuotationBreakup().title("Employee name")));
-
-		return onSelectBody;
+		onSelectBody.setMessage(new OnSelectMessage().order(new OnSelectMessageOrder()));
+		onSelectBody.getMessage().getOrder().provider(new Provider().id("Tibil solutions"));
+			
+		onSelectBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("20")));
+		QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
+		quotationBreakup.title("Employee name200").price(new Price().value("10"));
+		onSelectBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(quotationBreakup));
+		
+		AllOfonSelectMessageOrderItemsItems onSelectMessageOrderItems = (AllOfonSelectMessageOrderItemsItems) new AllOfonSelectMessageOrderItemsItems().id("1");
+		onSelectMessageOrderItems.descriptor(new Descriptor().name("Candidate1"));
+		onSelectMessageOrderItems.price(new Price().currency("INR").value("500000.0"));
+		
+		onSelectBody.getMessage().getOrder().addItemsItem(onSelectMessageOrderItems);
+		
+		return onSelectBody;		
+		
 	}
 
 }
+
+
+
+
+
+
+
+
+/*		Item items = new Item().id("1").descriptor(new Descriptor().name("Candidate1"));
+items.price(new Price());
+items.getPrice().currency("INR");
+items.getPrice().value("500000.0");
+*/
+
+
+/*		AddOn addOn = new AddOn().id("1");
+addOn.descriptor(new Descriptor().name("Candidate1"));
+addOn.price(new Price().currency("INR").value("500000.0"));
+onSelectBody.getMessage().getOrder().addAddOnsItem(addOn);
+*/
+
+
+

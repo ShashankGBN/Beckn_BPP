@@ -87,8 +87,19 @@ public class Order   {
 
   @JsonProperty("updated_at")
   private OffsetDateTime updatedAt = null;
+  
+  @JsonProperty("items")
+  private List<Item> item = null;
 
-  public Order id(String id) {
+  public List<Item> getItem() {
+	return item;
+}
+
+public void setItem(List<Item> item) {
+	this.item = item;
+}
+
+public Order id(String id) {
     this.id = id;
     return this;
   }
@@ -312,7 +323,8 @@ public class Order   {
         Objects.equals(this.quote, order.quote) &&
         Objects.equals(this.payment, order.payment) &&
         Objects.equals(this.createdAt, order.createdAt) &&
-        Objects.equals(this.updatedAt, order.updatedAt);
+        Objects.equals(this.updatedAt, order.updatedAt)&&
+    	Objects.equals(this.item, order.item);
   }
 
   @Override
@@ -335,6 +347,7 @@ public class Order   {
     sb.append("    payment: ").append(toIndentedString(payment)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
+    sb.append("    item: ").append(toIndentedString(item)).append("\n");
     sb.append("}");
     return sb.toString();
   }

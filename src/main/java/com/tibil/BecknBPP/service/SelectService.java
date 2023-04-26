@@ -77,66 +77,59 @@ public class SelectService implements ProcessInternalRequestService {
 
 			System.out.println("Select providerId --------------" + selectProviderId);
 	
-			OnSelectBody body = getOnselectBody(selectBody);
+			OnSelectBody body = getOnSelectBody(selectBody);
 			ResponseEntity<InlineResponse2001> response = restTemplate.postForEntity("http://localhost:8080/on_select",
 					body, InlineResponse2001.class);
 
 			dbUtils.insertRequestFlow(body.getContext(), utils.getSerialisedData(body),
 					utils.getSerialisedData(response.getBody()));
-
+		
 		}
 
 	}	
 
 	public String getSelectProviderId(SelectBody selectBody) {
-
+		
 		return selectBody.getMessage().getOrder().getProvider().getId();
 	}
-		
+	
+	
+	public String id(SelectBody selectBody)
+	{
+		return selectBody.getMessage().getOrder().getItem().get(0).getId();
+	}
+	public String name(SelectBody selectBody)
+	{
+		return selectBody.getMessage().getOrder().getItem().get(0).getDescriptor().getName();
+	}
+	public String currency(SelectBody selectBody)
+	{
+		return selectBody.getMessage().getOrder().getItem().get(0).getPrice().getCurrency();
+	}	
+	public String value(SelectBody selectBody)
+	{
+		return selectBody.getMessage().getOrder().getItem().get(0).getPrice().getValue();
+	}
+	
 
-	public OnSelectBody getOnselectBody(SelectBody selectBody) {
+
+	public OnSelectBody getOnSelectBody(SelectBody selectBody) {
 
 		OnSelectBody onSelectBody = new OnSelectBody();
 		onSelectBody.setContext(selectBody.getContext().action(ActionEnum.ON_SELECT));
 		onSelectBody.setMessage(new OnSelectMessage().order(new OnSelectMessageOrder()));
-		onSelectBody.getMessage().getOrder().provider(new Provider().id("Tibil solutions"));
+		onSelectBody.getMessage().getOrder().provider(new Provider().id(getSelectProviderId(selectBody)));
 			
-		onSelectBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("20")));
-		QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
-		quotationBreakup.title("Employee name200").price(new Price().value("10"));
-		onSelectBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(quotationBreakup));
+		QuotationBreakup quotationBreakup = new QuotationBreakup().title(name(selectBody)).price(new Price().value(value(selectBody)));
+		onSelectBody.getMessage().getOrder().setQuote(new Quotation().price(new Price().currency(currency(selectBody)).value(value(selectBody))).addBreakupItem(quotationBreakup));
 		
-		AllOfonSelectMessageOrderItemsItems onSelectMessageOrderItems = (AllOfonSelectMessageOrderItemsItems) new AllOfonSelectMessageOrderItemsItems().id("1");
-		onSelectMessageOrderItems.descriptor(new Descriptor().name("Candidate1"));
-		onSelectMessageOrderItems.price(new Price().currency("INR").value("500000.0"));
+		AllOfonSelectMessageOrderItemsItems onSelectMessageOrderItems = (AllOfonSelectMessageOrderItemsItems) new AllOfonSelectMessageOrderItemsItems().id(id(selectBody));
+		onSelectMessageOrderItems.descriptor(new Descriptor().name(name(selectBody)));
+		onSelectMessageOrderItems.price(new Price().currency(currency(selectBody)).value(value(selectBody)));
 		
-		onSelectBody.getMessage().getOrder().addItemsItem(onSelectMessageOrderItems);
-		
+		onSelectBody.getMessage().getOrder().addItemsItem(onSelectMessageOrderItems);		
 		return onSelectBody;		
 		
 	}
 
 }
-
-
-
-
-
-
-
-
-/*		Item items = new Item().id("1").descriptor(new Descriptor().name("Candidate1"));
-items.price(new Price());
-items.getPrice().currency("INR");
-items.getPrice().value("500000.0");
-*/
-
-
-/*		AddOn addOn = new AddOn().id("1");
-addOn.descriptor(new Descriptor().name("Candidate1"));
-addOn.price(new Price().currency("INR").value("500000.0"));
-onSelectBody.getMessage().getOrder().addAddOnsItem(addOn);
-*/
-
-
-

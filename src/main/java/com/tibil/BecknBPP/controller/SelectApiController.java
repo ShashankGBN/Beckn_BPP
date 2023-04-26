@@ -52,11 +52,7 @@ public class SelectApiController implements SelectApi {
                 return new ResponseEntity<InlineResponse200>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-
         return new ResponseEntity<InlineResponse200>(HttpStatus.NOT_IMPLEMENTED);
     }
 
 }
-
-
-//{\n  \"message\" : {\n    \"ack\" : {\n      \"status\" : \"ACK\"\n    }\n  },\n  \"error\" : {\n    \"path\" : \"path\",\n    \"code\" : \"code\",\n    \"type\" : \"CONTEXT-ERROR\",\n    \"message\" : \"message\"\n  }\n}

@@ -20,6 +20,7 @@ import com.tibil.BecknBPP.model.ServiceRequest;
 import com.tibil.BecknBPP.model.ServiceRequestFlow;
 import com.tibil.BecknBPP.service.Constants;
 import com.tibil.BecknBPP.dto.Order;
+import com.tibil.BecknBPP.dto.Payment;
 
 @Component
 public class DbUtils {
@@ -61,14 +62,15 @@ public class DbUtils {
 
 	}
 	
-	public ServiceOrder insertServiceOrder(Context context, String data, Price price)
+	public ServiceOrder insertServiceOrder(Context context, String data)
 	{
 		ServiceOrder serviceOrder = new ServiceOrder();
 		Order order = new Order();
+		Price price = new Price();
 		serviceOrder.setCreatedAt(OffsetDateTime.now());
 		serviceOrder.setBapId(context.getBapId());
 		serviceOrder.setBapOrderId(order.getId());
-		serviceOrder.setPaymentId(data);
+		serviceOrder.setPaymentId(context.getTransactionId());
 		serviceOrder.setBppId(context.getBppId());
 		serviceOrder.setCurrency(price.getCurrency());
 		

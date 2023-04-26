@@ -16,6 +16,7 @@ import com.tibil.BecknBPP.dto.Contact;
 import com.tibil.BecknBPP.dto.Context.ActionEnum;
 import com.tibil.BecknBPP.dto.Descriptor;
 import com.tibil.BecknBPP.dto.Fulfillment;
+import com.tibil.BecknBPP.dto.FulfillmentEnd;
 import com.tibil.BecknBPP.dto.FulfillmentStart;
 import com.tibil.BecknBPP.dto.InlineResponse2001;
 import com.tibil.BecknBPP.dto.Item;
@@ -91,7 +92,7 @@ public class UpdateService implements ProcessInternalRequestService {
 		onUpdateBody.setMessage(new SelectMessage());
 		onUpdateBody.getMessage().setOrder(new Order().id("order_id-001").state(StateEnum.CANCELLED).provider(new Provider().id("Tibil solutions")));
 
-		Item items = new Item().id("1");
+	//	Item items = new Item().id("1");
 		
 		
 		Billing billing = new Billing().phone("9620336606").name("Sanjay").email("sanjay@peppo.co.in");
@@ -100,7 +101,10 @@ public class UpdateService implements ProcessInternalRequestService {
 		
 		Fulfillment fulFillment = new Fulfillment().state(new State().descriptor(new Descriptor().name("SEARCHING-FOR-FMD-AGENT")));
 		fulFillment.tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
-		fulFillment.getEnd().contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay")).location(new Location().gps("12.964319, 77.6810060000001"));
+		fulFillment.setEnd(new FulfillmentEnd());
+		fulFillment.getEnd().setLocation(new Location().gps("12.964319, 77.6810060000001"));
+		fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay"));
+
 		
 		onUpdateBody.getMessage().setOrder(new Order().quote(new Quotation().price(new Price().currency("INR").value("20"))));
 		

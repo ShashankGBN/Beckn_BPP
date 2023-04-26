@@ -18,6 +18,7 @@ import com.tibil.BecknBPP.dto.Contact;
 import com.tibil.BecknBPP.dto.Descriptor;
 import com.tibil.BecknBPP.dto.Context.ActionEnum;
 import com.tibil.BecknBPP.dto.Fulfillment;
+import com.tibil.BecknBPP.dto.FulfillmentEnd;
 import com.tibil.BecknBPP.dto.FulfillmentStart;
 import com.tibil.BecknBPP.dto.InlineResponse2001;
 import com.tibil.BecknBPP.dto.Item;
@@ -28,6 +29,7 @@ import com.tibil.BecknBPP.dto.OnInitMessageOrder;
 import com.tibil.BecknBPP.dto.OnInitMessageOrderItems;
 import com.tibil.BecknBPP.dto.OnInitMessageOrderProvider;
 import com.tibil.BecknBPP.dto.Payment;
+import com.tibil.BecknBPP.dto.Person;
 import com.tibil.BecknBPP.dto.Payment.TypeEnum;
 import com.tibil.BecknBPP.dto.Price;
 import com.tibil.BecknBPP.dto.Quotation;
@@ -60,8 +62,7 @@ public class InitService implements ProcessInternalRequestService {
 
 		dbUtils.insertRequestFlow(inputBody.getContext(), initRequestSerialized, null);
 		
-		dbUtils.insertServiceOrder(inputBody.getContext(), initRequestSerialized, null);
-
+		dbUtils.insertServiceOrder(inputBody.getContext(), initRequestSerialized);
 
 	}
 
@@ -86,7 +87,7 @@ public class InitService implements ProcessInternalRequestService {
 			dbUtils.insertRequestFlow(body.getContext(), utils.getSerialisedData(body),
 					utils.getSerialisedData(response.getBody()));
 			
-			dbUtils.insertServiceOrder(body.getContext(), utils.getSerialisedData(body), null);
+			dbUtils.insertServiceOrder(body.getContext(), utils.getSerialisedData(body));
 			
 		}
 
@@ -97,7 +98,6 @@ public class InitService implements ProcessInternalRequestService {
 
 		return initBody.getMessage().getOrder().getPayment().getType();
 	}
-
 
 	public OnInitBody getOnInitBody(InitBody initBody) {
 
@@ -112,9 +112,14 @@ public class InitService implements ProcessInternalRequestService {
 		onInitBody.getMessage().getOrder().addItemsItem(onInitMessageOrderItems);
 		
 		Fulfillment fulFillment = new Fulfillment().tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
-		fulFillment.getEnd().location(new Location().gps("12.964319, 77.6810060000001")).contact(new Contact().phone("+919945099450"));
-		
+		fulFillment.setEnd(new FulfillmentEnd());
+		fulFillment.getEnd().setLocation(new Location().gps("12.964319, 77.6810060000001"));
+		fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay"));
+
 		onInitBody.getMessage().getOrder().setFulfillment(fulFillment);
+		
+		Price price = new Price().currency("INR").value("30");
+		
 		onInitBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("30")));
 		
 		QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));

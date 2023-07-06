@@ -71,7 +71,9 @@ public class SearchService implements ProcessInternalRequestService {
 			System.out.println("Search designation --------------" + searchDesignation);
 			skills.stream().forEach(x -> System.out.println(x));
 
-			List<Candidate> candidates = dbUtils.getCandidatesBasedOnDesignationAndSkills(searchDesignation, skills);
+			boolean availability = true;
+			
+			List<Candidate> candidates = dbUtils.getCandidatesBasedOnDesignationAndSkillsAndAvailability(searchDesignation, skills, availability);
 			System.out.println(candidates.size());
 			candidates.stream().forEach(x -> System.out.println(x));
 
@@ -89,16 +91,16 @@ public class SearchService implements ProcessInternalRequestService {
 	public List<Item> createCandidatesItemList(List<Candidate> candidates) {
 
 		List<Item> items = new ArrayList<Item>();
-		for (Candidate candiate : candidates) {
+		for (Candidate candidate : candidates) {
 
 			Item item = new Item();
-			item.setId(String.valueOf(candiate.getId()));
-			item.descriptor(new Descriptor().name(candiate.getName()));
-			item.price(new Price().currency("INR").value(String.valueOf(candiate.getCtc())));
+			item.setId(String.valueOf(candidate.getId()));
+			item.descriptor(new Descriptor().name(candidate.getName()));
+			item.price(new Price().currency("INR").value(String.valueOf(candidate.getCtc())));
 
 			Tags tags = new Tags();
 			ArrayList<HashMap<String, String>> skillSet = new ArrayList<HashMap<String, String>>();
-			for (Skill skill : candiate.getSkills()) {
+			for (Skill skill : candidate.getSkills()) {
 
 				HashMap<String, String> map = new HashMap<String, String>();
 				map.put("code", skill.getName());
@@ -109,6 +111,7 @@ public class SearchService implements ProcessInternalRequestService {
 			item.setTags(tags);
 
 			items.add(item);
+			
 		}
 		return items;
 
@@ -152,7 +155,7 @@ public class SearchService implements ProcessInternalRequestService {
 		Provider provider = new Provider().id("Tibil Solutions").descriptor(new Descriptor().name("Tibil Solutions"));
 		provider.setCategories((List<Category>) createResponseCategories(candidates));
 		provider.setItems(createCandidatesItemList(candidates));
-
+		
 		onSearchBody.getMessage().getCatalog().addProvidersItem(provider);
 
 		return onSearchBody;

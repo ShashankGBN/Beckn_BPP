@@ -1,9 +1,7 @@
 package com.tibil.BecknBPP.service;
 
-	import java.util.HashMap;
-	import java.util.List;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 	import org.springframework.beans.factory.annotation.Autowired;
 	import org.springframework.http.ResponseEntity;
@@ -13,21 +11,16 @@ import java.util.stream.Collectors;
 	import com.tibil.BecknBPP.dao.utils.DbUtils;
 	import com.tibil.BecknBPP.dto.Billing;
 	import com.tibil.BecknBPP.dto.Circle;
-	import com.tibil.BecknBPP.dto.Contact;
 	import com.tibil.BecknBPP.dto.Context.ActionEnum;
 import com.tibil.BecknBPP.dto.Descriptor;
 import com.tibil.BecknBPP.dto.Fulfillment;
 import com.tibil.BecknBPP.dto.FulfillmentEnd;
 import com.tibil.BecknBPP.dto.FulfillmentStart;
 	import com.tibil.BecknBPP.dto.InlineResponse2001;
-	import com.tibil.BecknBPP.dto.Item;
 	import com.tibil.BecknBPP.dto.Location;
 import com.tibil.BecknBPP.dto.OnConfirmBody;
 import com.tibil.BecknBPP.dto.Order;
-import com.tibil.BecknBPP.dto.Order.StateEnum;
 import com.tibil.BecknBPP.dto.Payment;
-import com.tibil.BecknBPP.dto.Payment.StatusEnum;
-import com.tibil.BecknBPP.dto.Person;
 import com.tibil.BecknBPP.dto.Price;
 import com.tibil.BecknBPP.dto.Provider;
 import com.tibil.BecknBPP.dto.Quotation;
@@ -35,7 +28,6 @@ import com.tibil.BecknBPP.dto.Quotation;
 import com.tibil.BecknBPP.dto.SelectMessage;
 import com.tibil.BecknBPP.dto.State;
 import com.tibil.BecknBPP.dto.ConfirmBody;
-	import com.tibil.BecknBPP.model.Candidate;
 	import com.tibil.BecknBPP.model.ServiceRequestFlow;
 
 import jakarta.validation.Valid;
@@ -107,35 +99,38 @@ import jakarta.validation.Valid;
 			OnConfirmBody onConfirmBody = new OnConfirmBody();
 			onConfirmBody.setContext(confirmBody.getContext().action(ActionEnum.ON_CONFIRM));
 			onConfirmBody.setMessage(new SelectMessage());
-			onConfirmBody.getMessage().setOrder(new Order().id("order_id-001").state(StateEnum.ACTIVE).provider(new Provider().id("Tibil solutions")));
+			onConfirmBody.getMessage().setOrder(new Order().id(confirmBody.getMessage().getOrder().getId()).state(confirmBody.getMessage().getOrder().getState()).provider(new Provider().id(confirmBody.getMessage().getOrder().getProvider().getId())));
 
 		//	Item items = new Item().id("1");
 			
 			
 			
-			Billing billing = new Billing().phone("9620336606").name("Sanjay").email("sanjay@peppo.co.in");
+			Billing billing = new Billing().phone(confirmBody.getMessage().getOrder().getBilling().getPhone()).name(confirmBody.getMessage().getOrder().getBilling().getName()).email(confirmBody.getMessage().getOrder().getBilling().getEmail());
 			
 			onConfirmBody.getMessage().getOrder().billing(billing);
 			
 			Fulfillment fulFillment = new Fulfillment().state(new State().descriptor(new Descriptor().name("SEARCHING-FOR-FMD-AGENT")));
 			fulFillment.tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
 			fulFillment.setEnd(new FulfillmentEnd());
-			fulFillment.getEnd().setLocation(new Location().gps("12.964319, 77.6810060000001"));
-			fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay"));
+//			fulFillment.getEnd().setLocation(new Location().gps(confirmBody.getMessage().getOrder().getFulfillment().getEnd().getLocation().getGps()));
+//			fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone(confirmBody.getMessage().getOrder().getFulfillment().getEnd().getContact().getPhone())).person(new Person().name(confirmBody.getMessage().getOrder().getFulfillment().getEnd().getContact().getPhone()));
 
 			onConfirmBody.getMessage().getOrder().fulfillment(fulFillment);
 			onConfirmBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("30")));
 
 			
-			QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
-			quotationBreakup.title("Employee name200").price(new Price().value("10"));
+			QuotationBreakup quotationBreakup = new QuotationBreakup().title("Candidate1").price(new Price().value("10"));
+			quotationBreakup.title("Candidate2").price(new Price().value("10"));
 			quotationBreakup.title("BPP Fee").price(new Price().value("5"));
 			quotationBreakup.title("BAP Fee").price(new Price().value("5"));
 			
 			onConfirmBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(quotationBreakup));
 			
-			onConfirmBody.getMessage().setOrder(new Order().payment(new Payment().params(null)));
+			//onConfirmBody.getMessage().setOrder(new Order().payment(new Payment().params(getConfirmPayment(confirmBody))));
 			
+			onConfirmBody.getMessage().getOrder().payment(new Payment().params(getConfirmPayment(confirmBody)));
+
+			System.out.println(onConfirmBody.toString());
 			return onConfirmBody;
 		}
 	

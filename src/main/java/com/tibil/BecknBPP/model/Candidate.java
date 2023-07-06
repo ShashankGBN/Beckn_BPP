@@ -3,6 +3,7 @@ package com.tibil.BecknBPP.model;
 import java.util.Set;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +31,8 @@ public class Candidate extends BaseModel {
 			@JoinColumn(name = "skill_id") })
 	private Set<Skill> skills;
 	private float ctc;
+	@Column(nullable=false)
+	private boolean availability;
 
 	public long getId() {
 		return id;
@@ -70,11 +73,21 @@ public class Candidate extends BaseModel {
 	public void setCtc(float ctc) {
 		this.ctc = ctc;
 	}
+	
+	
+	
+	public boolean getAvailability() {
+		return availability;
+	}
+	
+	public void setAvailability(boolean availability) {
+		this.availability=availability;
+	}
 
 	@Override
 	public String toString() {
 		return "Candidate [id=" + id + ", name=" + name + ", designations=" + designations + ", skills=" + skills
-				+ ", ctc=" + ctc + "]";
+				+ ", ctc=" + ctc + ", availability=" + availability + "]";
 	}
 
 }

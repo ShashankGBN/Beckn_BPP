@@ -91,13 +91,17 @@ public class Order   {
   @JsonProperty("items")
   private List<Item> item = null;
 
+  public List<Item> item(List<Item> item) {
+	 return this.item=item; 
+  }
+  
   public List<Item> getItem() {
 	return item;
-}
+  }
 
 public void setItem(List<Item> item) {
 	this.item = item;
-}
+  }
 
 public Order id(String id) {
     this.id = id;

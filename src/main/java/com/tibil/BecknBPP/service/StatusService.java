@@ -99,8 +99,8 @@ import com.tibil.BecknBPP.dto.StatusBody;
 			OnStatusBody onStatusBody = new OnStatusBody();
 			onStatusBody.setContext(statusBody.getContext().action(ActionEnum.ON_STATUS));
 			onStatusBody.setMessage(new SelectMessage());
-			onStatusBody.getMessage().setOrder(new Order().id("order_id-001").state(StateEnum.ACTIVE).provider(new Provider().id("Tibil solutions")));
-
+			onStatusBody.getMessage().setOrder(new Order().id(getStatusOrderId(statusBody)).state(StateEnum.ACTIVE).provider(new Provider().id("Tibil solutions")));
+			
 		//	Item items = new Item().id("1");
 			
 			
@@ -119,8 +119,8 @@ import com.tibil.BecknBPP.dto.StatusBody;
 			onStatusBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("30")));
 
 			
-			QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
-			quotationBreakup.title("Employee name200").price(new Price().value("10"));
+			QuotationBreakup quotationBreakup = new QuotationBreakup().title("Candidate1").price(new Price().value("10"));
+			quotationBreakup.title("Candidate2").price(new Price().value("10"));
 			quotationBreakup.title("BPP Fee").price(new Price().value("5"));
 			quotationBreakup.title("BAP Fee").price(new Price().value("5"));
 			

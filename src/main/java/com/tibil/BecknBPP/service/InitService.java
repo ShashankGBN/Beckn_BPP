@@ -1,18 +1,18 @@
 package com.tibil.BecknBPP.service;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.tibil.BecknBPP.dto.OnSelectBody;
+import com.tibil.BecknBPP.dto.OnSelectMessage;
+import com.tibil.BecknBPP.dto.OnSelectMessageOrder;
 import com.tibil.BecknBPP.dao.utils.DbUtils;
 import com.tibil.BecknBPP.dto.AllOfonSelectMessageOrderItemsItems;
-import com.tibil.BecknBPP.dto.Category;
 import com.tibil.BecknBPP.dto.Circle;
 import com.tibil.BecknBPP.dto.Contact;
 import com.tibil.BecknBPP.dto.Descriptor;
@@ -28,15 +28,15 @@ import com.tibil.BecknBPP.dto.OnInitMessage;
 import com.tibil.BecknBPP.dto.OnInitMessageOrder;
 import com.tibil.BecknBPP.dto.OnInitMessageOrderItems;
 import com.tibil.BecknBPP.dto.OnInitMessageOrderProvider;
+import com.tibil.BecknBPP.dto.OnInitMessageOrderProviderLocation;
 import com.tibil.BecknBPP.dto.Payment;
-import com.tibil.BecknBPP.dto.Person;
 import com.tibil.BecknBPP.dto.Payment.TypeEnum;
+import com.tibil.BecknBPP.dto.Person;
 import com.tibil.BecknBPP.dto.Price;
 import com.tibil.BecknBPP.dto.Quotation;
 import com.tibil.BecknBPP.dto.QuotationBreakup;
+import com.tibil.BecknBPP.dto.SelectBody;
 import com.tibil.BecknBPP.dto.InitBody;
-import com.tibil.BecknBPP.model.Candidate;
-import com.tibil.BecknBPP.model.Designation;
 import com.tibil.BecknBPP.model.ServiceRequestFlow;
 
 @Component
@@ -76,9 +76,9 @@ public class InitService implements ProcessInternalRequestService {
 			System.out.println(f.toString());
 
 			InitBody initBody = utils.deserialiseData(f.getData(), InitBody.class);
-			TypeEnum initPaymentType = getInitPaymentType(initBody);
+			String providerId = getProviderId(initBody);
 
-			System.out.println("Payment Type --------------" + initPaymentType);
+			System.out.println("Provider Id --------------" + providerId);
 		
 			OnInitBody body = getOnInitBody(initBody);
 			ResponseEntity<InlineResponse2001> response = restTemplate.postForEntity("http://localhost:8080/on_init",
@@ -94,9 +94,9 @@ public class InitService implements ProcessInternalRequestService {
 	}
 	
 	
-	public TypeEnum getInitPaymentType(InitBody initBody) {
+	public String getProviderId(InitBody initBody) {
 
-		return initBody.getMessage().getOrder().getPayment().getType();
+		return initBody.getMessage().getOrder().getProvider().getId();
 	}
 
 	public OnInitBody getOnInitBody(InitBody initBody) {
@@ -104,31 +104,47 @@ public class InitService implements ProcessInternalRequestService {
 		OnInitBody onInitBody = new OnInitBody();
 		onInitBody.setContext(initBody.getContext().action(ActionEnum.ON_INIT));
 		onInitBody.setMessage(new OnInitMessage().order(new OnInitMessageOrder()));
-		onInitBody.getMessage().getOrder().provider(new OnInitMessageOrderProvider().id("Tibil solutions"));
-
-		OnInitMessageOrderItems onInitMessageOrderItems = new OnInitMessageOrderItems().id("1");
-		onInitMessageOrderItems.quantity("1");
-		
-		onInitBody.getMessage().getOrder().addItemsItem(onInitMessageOrderItems);
 		
 		Fulfillment fulFillment = new Fulfillment().tracking(false).start(new FulfillmentStart().location(new Location().id("Tibil solutions").circle(new Circle().gps("12.9423184,77.6016338"))));
 		fulFillment.setEnd(new FulfillmentEnd());
-		fulFillment.getEnd().setLocation(new Location().gps("12.964319, 77.6810060000001"));
-		fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone("9620336606")).person(new Person().name("Sanjay"));
+//		fulFillment.getEnd().setLocation(new Location().gps(initBody.getMessage().getOrder().getFulfillment().getEnd().getLocation().getGps()));
+//		fulFillment.end(new FulfillmentEnd()).contact(new Contact().phone(initBody.getMessage().getOrder().getFulfillment().getEnd().getContact().getPhone())).person(new Person().name(initBody.getMessage().getOrder().getFulfillment().getEnd().getLocation().getGps()));
+		
+		
+		
+		onInitBody.getMessage().setOrder(new OnInitMessageOrder().payment(new Payment().type(initBody.getMessage().getOrder().getPayment().getType())));
+		onInitBody.getMessage().getOrder().provider(new OnInitMessageOrderProvider().id(getProviderId(initBody)));
+//		onInitBody.getMessage().getOrder().setFulfillment(fulFillment);		
+		
+		List<Item> itemsList = initBody.getMessage().getOrder().getItem();
+		if (itemsList != null && !itemsList.isEmpty()) {
+		    for (Item item : itemsList) {
+		        String itemId = item.getId();
 
-		onInitBody.getMessage().getOrder().setFulfillment(fulFillment);
+		        // Create a new item for the order
+		        OnInitMessageOrderItems onInitMessageOrderItems = new OnInitMessageOrderItems();
+		        
+		        onInitMessageOrderItems.id(itemId);
+		        onInitMessageOrderItems.quantity("1");
+
+		        // Add the new item to the order
+		        onInitBody.getMessage().getOrder().addItemsItem(onInitMessageOrderItems);
+		        		
+		    }
+		} 
 		
-		Price price = new Price().currency("INR").value("30");
 		
-		onInitBody.getMessage().getOrder().quote(new Quotation().price(new Price().currency("INR").value("30")));
+		OnSelectBody onSelectBody = new OnSelectBody();
+		onSelectBody.setMessage(new OnSelectMessage());
+		onSelectBody.getMessage().setOrder(new OnSelectMessageOrder());
+		onSelectBody.getMessage().getOrder().setQuote(new Quotation());
+		List<QuotationBreakup> QuotationBreakups = onSelectBody.getMessage().getOrder().getQuote().getBreakup();
+		onSelectBody.getMessage().getOrder().getQuote().setPrice(new Price());
+		Price price = onSelectBody.getMessage().getOrder().getQuote().getPrice();
+		String currency = onSelectBody.getMessage().getOrder().getQuote().getPrice().getCurrency();
 		
-		QuotationBreakup quotationBreakup = new QuotationBreakup().title("Employee name").price(new Price().value("10"));
-		quotationBreakup.title("Employee name200").price(new Price().value("10"));
-		quotationBreakup.title("BPP Fee").price(new Price().value("5"));
-		quotationBreakup.title("BAP Fee").price(new Price().value("5"));
-		
-		onInitBody.getMessage().getOrder().setQuote(new Quotation().addBreakupItem(quotationBreakup));
-		onInitBody.getMessage().setOrder(new OnInitMessageOrder().payment(new Payment().type(TypeEnum.POST_FULFILLMENT)));
+		onInitBody.getMessage().getOrder().setQuote(new Quotation().price(new Price().currency(currency).value(String.valueOf(price))).breakup(QuotationBreakups));//onSelectBody.getMessage().getOrder().getQuote().getBreakup()));			
+		onInitBody.getMessage().setOrder(new OnInitMessageOrder().payment(new Payment().type(initBody.getMessage().getOrder().getPayment().getType())));
 
 		return onInitBody;
 	}

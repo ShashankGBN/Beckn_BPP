@@ -44,6 +44,7 @@ public class Descriptor   {
 
   @JsonProperty("3d_render")
   private String _3dRender = null;
+  
 
   public Descriptor name(String name) {
     this.name = name;
@@ -223,7 +224,7 @@ public class Descriptor   {
         Objects.equals(this.images, descriptor.images) &&
         Objects.equals(this.audio, descriptor.audio) &&
         Objects.equals(this._3dRender, descriptor._3dRender);
-  }
+    }
 
   @Override
   public int hashCode() {

@@ -85,9 +85,9 @@ public class DbUtils {
 		return serviceRequestFlowRepository.getByCreatedAtBetweenAndAction(start, end, action);
 	}
 	
-	public List<Candidate> getCandidatesBasedOnDesignationAndSkills(String searchDesignation, List<String>skills){
+	public List<Candidate> getCandidatesBasedOnDesignationAndSkillsAndAvailability(String searchDesignation, List<String>skills, boolean availability){
 		
-		return candidateRepository.findDistinctByDesignations_NameContainingIgnoreCaseAndSkills_NameIn(searchDesignation, skills);
+		return candidateRepository.findDistinctByDesignations_NameContainingIgnoreCaseAndSkills_NameInAndAvailability(searchDesignation, skills, availability);
 	}
 
 }
